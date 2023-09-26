@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\TodoController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -14,5 +16,24 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('login');
+});
+
+Auth::routes();
+
+Route::controller(TodoController::class)->group(function(){
+
+    Route::get('/task/list', 'index');
+
+    Route::get('/task/create/{id?}', 'showTaskForm');
+    Route::post('/task/create/{id?}', 'createTask');
+
+    Route::get('/task/show/{id?}', 'showTask');
+
+    Route::get('/task/edit/{id}', 'editTask');
+    Route::post('/task/update/{id}', 'editTask');
+
+    Route::post('/task/complete', 'completeTask');
+
+    Route::post('/task/delete', 'deleteTask');
 });
