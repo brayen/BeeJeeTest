@@ -25,6 +25,7 @@ npm install && npm run dev
 
 
 + POST /api/createTask
+    + pid           {integer} parentID, create subtask
     + *title        {string}
     + *description  {text}
     + *priority     {integer} 1-5
@@ -46,7 +47,7 @@ npm install && npm run dev
 ___
 
 + PUT /api/updateTask
-    + *ID   {integer}
+    + *id   {integer}
     + title        {string}
     + description  {text}
     + priority     {integer} 1-5
@@ -54,11 +55,11 @@ ___
     \* - required fields
     
 + PUT /api/completeTask
-    + *ID   {integer}
+    + *id   {integer}
       
     \* - required fields
     
 + DELETE /api/deleteTask
-    + *ID   {integer}
+    + *id   {integer}
       
     \* - required fields
