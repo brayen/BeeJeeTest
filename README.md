@@ -21,6 +21,7 @@ npm install && npm run dev
 
 > | Authorization:                  |
 > | :---                            |
+> |                                 |
 > | HEADER email:{email@domain.com} |
 > |                                 |
 > | HEADER password:{mypassword}    |
