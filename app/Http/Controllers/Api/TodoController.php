@@ -56,7 +56,27 @@ class TodoController extends Controller
     {
         if (true !== $this->access()) return $this->validation;
 
+        if (null !== $pid =$this->request->get('pid')) {
 
+            $parent = $this->getTaskById($pid);
+
+            if (!$parent) return response(['status' => 'error', 'message' => 'You can\'t create subtask with this parentID']);
+        }
+
+        $validator = Validator::make($this->request->all(), [
+            'title'         => ['required', 'string', 'max:255'],
+            'description'   => ['required'],
+            'priority'      => ['required', 'integer']
+        ]);
+
+        if ($validator->fails()) {
+            return response(['error' => $validator->messages()], 401);
+        }
+
+        $data = $this->request->all();
+        $data['uid'] = $this->uid;
+
+        return response(['status' => (bool)($this->model)::create($data)]);
     }
 
     public function read()
