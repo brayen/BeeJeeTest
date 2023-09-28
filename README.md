@@ -19,47 +19,74 @@ npm install && npm run dev
 ---
 #### API Reference
 
-> Authorization:
-> + HEADER email:email@domain.com
-> + HEADER password:mypassword
+> | Authorization:                  |
+> | :---                            |
+> | HEADER email:{email@domain.com} |
+> |                                 |
+> | HEADER password:{mypassword}    |
+> |                                 |
 
+---
 
-+ POST /api/createTask
-    + pid           {integer} parentID, create subtask
-    + *title        {string}
-    + *description  {text}
-    + *priority     {integer} 1-5
+*POST /api/createTask*
 
-     \* - required fields 
+| Parameter              | Description | Comment                  |
+| ---                    | ---         | ---                      |
+| `pid`                  | `{integer}` | parentID, create subtask |
+| `*title`               | `{string}`  |                          |
+| `*description`         | `{text}`    |                          |
+| `*priority`            | `{integer}` | 1 - 5                    |
 
+>\* - required fields 
 
-+ GET /api/getTasks
-    + (filter)  'status'    0|1 (todo|done)
-    + (filter)  'priority'  1-5
-    + (filter)  'title'     {search string}
-    + (orders)  createdAt|completedAt|priority
-    + (sort)    ASC|DESC    (Default ASC)
+---
 
-    \- Example:
+*GET /api/getTasks*
+
+| Parameter              | Description | Comment                               |
+| ---                    | ---         | ---                                   |
+| [filter] `status`      | `{integer}` | 0 or 1                                | 
+| [filter] `priority`    | `{integer}` | 1 - 5                                 |
+| [filter] `title`       | `{string}`  |                                       |
+| [orders] `order`       | `{string}`  | createdAt \/ completedAt \/ priority  |                      |
+| [sort]   `sort`        | `{string}`  | ASC or DESC (Default ASC)             |
+
+> Example:
 ```
 {{host}}/api/getTasks?status=0&priority=2&title=task 1&order=createdAt&sort=DESC
 ```    
-___
 
-+ PUT /api/updateTask
-    + *id   {integer}
-    + title        {string}
-    + description  {text}
-    + priority     {integer} 1-5
-      
-    \* - required fields
-    
-+ PUT /api/completeTask
-    + *id   {integer}
-      
-    \* - required fields
-    
-+ DELETE /api/deleteTask
-    + *id   {integer}
-      
-    \* - required fields
+---
+
+*PUT /api/updateTask*
+
+| Parameter              | Description | Comment                  |
+| ---                    | ---         | ---                      |
+| `*id`                  | `{integer}` |                          |
+| `title`                | `{string}`  |                          |
+| `description`          | `{text}`    |                          |
+| `priority`             | `{integer}` | 1 - 5                    |
+
+>\* - required fields
+
+---
+
+*PUT /api/completeTask*
+
+| Parameter              | Description | Comment                  |
+| ---                    | ---         | ---                      |
+| `*id`                  | `{integer}` |                          |
+
+>\* - required fields
+
+---
+
+*DELETE /api/deleteTask*
+
+| Parameter              | Description | Comment                  |
+| ---                    | ---         | ---                      |
+| `*id`                  | `{integer}` |                          |
+
+>\* - required fields
+
+---    
