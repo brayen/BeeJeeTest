@@ -15,7 +15,7 @@ class TodoController extends Controller
     /**
      * @var int
      */
-    private $uid;
+    private $user_id;
 
     /**
      * @var array
@@ -56,9 +56,9 @@ class TodoController extends Controller
     {
         if (true !== $this->access()) return $this->validation;
 
-        if (null !== $pid =$this->request->get('pid')) {
+        if (null !== $parent_id =$this->request->get('parent_id')) {
 
-            $parent = $this->getTaskById($pid);
+            $parent = $this->getTaskById($parent_id);
 
             if (!$parent) return response(['status' => 'error', 'message' => 'You can\'t create subtask with this parentID']);
         }
@@ -74,7 +74,7 @@ class TodoController extends Controller
         }
 
         $data = $this->request->all();
-        $data['uid'] = $this->uid;
+        $data['user_id'] = $this->user_id;
 
         return response(['status' => (bool)($this->model)::create($data)]);
     }
@@ -93,7 +93,7 @@ class TodoController extends Controller
             'createdAt',
             'completedAt'
         ])
-            ->where('uid', $this->uid);
+            ->where('user_id', $this->user_id);
 
         // Filters
         if ($this->request->has('status')) {
@@ -216,7 +216,7 @@ class TodoController extends Controller
         $user = User::where('email', $this->credentials['email'])->first();
 
         if (Hash::check($this->credentials['password'], $user->password)) {
-            $this->uid = $user->id;
+            $this->user_id = $user->id;
 
             return true;
         }
@@ -234,7 +234,7 @@ class TodoController extends Controller
     protected function getTaskById($id)
     {
         return ($this->model)::where([
-                    ['uid', $this->uid],
+                    ['user_id', $this->user_id],
                     ['id',  $id]
                 ])->first();
     }
