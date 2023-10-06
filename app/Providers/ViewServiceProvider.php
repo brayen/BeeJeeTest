@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Enums\PriorityEnum;
 use App\Enums\StatusEnum;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,6 +15,7 @@ class ViewServiceProvider extends ServiceProvider
         View::share([
             'status'   => StatusEnum::class,
             'priority' => PriorityEnum::class,
+            'auth'     => Auth::class,
         ]);
     }
 }

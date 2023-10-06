@@ -36,7 +36,7 @@
                                 Priority: {{ $task->priority }} ]
                             </div>
                             <div class="col-md-6" style="text-align: right">
-                                @if (\Illuminate\Support\Facades\Auth::user()->id == $task->user->id && $status::tryFrom($task->status)->name == $status::Todo)
+                                @if ($auth::user()->id == $task->user->id && $task->status == $status::Todo->value)
                                 <a href="/task/edit/{{ $task->id }}" class="btn btn-primary">Edit</a>
                                 <a href="/task/create/{{ $task->id }}" class="btn btn-primary">Create Subtask</a>
 
