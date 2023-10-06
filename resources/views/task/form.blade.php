@@ -8,7 +8,7 @@
                     <div class="card-header">{{ isset($task) ? 'Update' : 'Create'}} task</div>
 
                     <div class="card-body">
-                        <form id="task-form" task-id="{{ isset($task) ? $task->id:'' }}" task-pid="{{ isset($pid) ? $pid:'' }}">
+                        <form id="task-form" task-id="{{ isset($task) ? $task->id:'' }}" task-parent_id="{{ isset($parent_id) ? $parent_id:'' }}">
                             <div class="form-group">
                                 <label for="title">Title</label>
                                 <input type="text" class="form-control task-data" id="title" placeholder="Enter task title" value="{{ isset($task) ? $task->title:''}}" required>
@@ -24,12 +24,10 @@
                                     <label for="priority">Task Priority</label>
                                 </div>
                                 <div>
-                                    <select class="form-control task-data" style="width: 50px" id="priority" priority="{{ isset($task) ? $task->priority : 0}}">
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
+                                    <select id="priority" class="form-control task-data form-select" priority="{{ isset($task) ? $task->priority : 0}}">
+                                        @foreach($priority::getAllItems() as $k => $v)
+                                            <option value="{{ $k }}">{{ $v }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>

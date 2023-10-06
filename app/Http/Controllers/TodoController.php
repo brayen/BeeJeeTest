@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Todo;
-use App\Providers\RouteServiceProvider;
-use http\Client\Response;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -32,7 +34,7 @@ class TodoController extends Controller
     {
         $tasks = Todo::with('user')
             ->where([
-                ['pid', 0],
+                ['parent_id', 0],
                 ['deleted', 0]
             ])
             ->orderBy('id', 'desc')
@@ -48,24 +50,24 @@ class TodoController extends Controller
     public function showTaskForm($id=null)
     {
 
-        $pid = $id;
+        $parent_id = $id;
 
-        if (null !== $pid) {
-            $task = $this->getTaskById($pid);
+        if (null !== $parent_id) {
+            $task = $this->getTaskById($parent_id);
 
-            if (false === $this->checkAccess($task->uid, false)) {
+            if (false === $this->checkAccess($task->user_id, false)) {
                 return view('403');
             }
         }
 
-        return view('task.form', compact('pid'));
+        return view('task.form', compact('parent_id'));
     }
 
     /**
      * @param $id
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application
+     * @return Application|Factory|View|\Illuminate\Foundation\Application
      */
-    public function showTask($id)
+    public function showTask($id): \Illuminate\Foundation\Application|View|Factory|Application
     {
         $canComplete = true;
 
@@ -83,25 +85,29 @@ class TodoController extends Controller
     }
 
     /**
-     * @param null $id
      * @param Request $request
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
+     * @return Application|ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
      */
-    public function createTask(Request $request)
+    public function createTask(Request $request): \Illuminate\Foundation\Application|\Illuminate\Http\Response|Application|ResponseFactory
     {
         $data = $request->all();
-        $data['uid'] = Auth::user()->id;
+        $data['user_id'] = Auth::user()->id;
 
         $result = Todo::create($data);
 
         return response(['status' => true, 'id' => $result->id], 200);
     }
 
-    public function editTask($id, Request $request)
+    /**
+     * @param $id
+     * @param Request $request
+     * @return false|Application|ResponseFactory|Factory|View|\Illuminate\Foundation\Application|\Illuminate\Http\Response
+     */
+    public function editTask($id, Request $request): Factory|View|\Illuminate\Foundation\Application|\Illuminate\Http\Response|bool|Application|ResponseFactory
     {
         $task = $this->getTaskById($id ?? $request->get('id'));
 
-        if (false === $this->checkAccess($task->uid, false)) {
+        if (false === $this->checkAccess($task->user_id, false)) {
             return view('403');
         }
 
@@ -116,13 +122,15 @@ class TodoController extends Controller
 
             return response(['status' => $result]);
         }
+
+        return false;
     }
 
     /**
      * @param Request $request
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
+     * @return Application|ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
      */
-    public function completeTask(Request $request)
+    public function completeTask(Request $request): \Illuminate\Foundation\Application|\Illuminate\Http\Response|Application|ResponseFactory
     {
         $canComplete = true;
         $task = $this->getTaskById($request->get('id'));
@@ -151,9 +159,9 @@ class TodoController extends Controller
 
     /**
      * @param Request $request
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
+     * @return Application|ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
      */
-    public function deleteTask(Request $request)
+    public function deleteTask(Request $request): \Illuminate\Foundation\Application|\Illuminate\Http\Response|Application|ResponseFactory
     {
         $canDelete = true;
         $task = $this->getTaskById($request->get('id'));
@@ -222,23 +230,23 @@ class TodoController extends Controller
      * @param $id
      * @return mixed
      */
-    protected function getTaskById($id)
+    protected function getTaskById($id): mixed
     {
         $task = Todo::find($id);
 
-        $this->checkAccess($task->uid);
+        $this->checkAccess($task->user_id);
 
         return $task;
     }
 
     /**
-     * @param $uid
-     * @param bool $ajax
-     * @return bool|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
+     * @param $user_id
+     * @param $ajax
+     * @return bool|Application|ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
      */
-    protected function checkAccess($uid, $ajax=true)
+    protected function checkAccess($user_id, $ajax=true): \Illuminate\Foundation\Application|\Illuminate\Http\Response|bool|Application|ResponseFactory
     {
-        if ($uid !== Auth::user()->id) {
+        if ($user_id !== Auth::user()->id) {
             return $ajax === true ? response('You can\'t do this action with this task', 403) : false;
         }
 

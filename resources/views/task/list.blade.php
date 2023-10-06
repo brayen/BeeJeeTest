@@ -37,16 +37,14 @@
                                 <th scope="row">{{ $task->id }}</th>
                                 <td>{{ $task->user->name }}</td>
                                 <td><a href="/task/show/{{ $task->id }}" class="link-underline link-underline-opacity-0">{{ $task->title }}</a></td>
-                                <td>{{ $task->priority }}</td>
-                                <td class="text-{{ $task->status == 0 ? 'info' : 'success' }}">
-                                    {{ $task->status == 0 ? 'Todo' : 'Done' }}
-                                </td>
+                                <td>{{ $priority::tryFrom($task->priority)->name }}</td>
+                                <td class="text-{{ $status::tryFrom($task->status)->getStatusStyle() }}">{{ $status::tryFrom($task->status)->name }}</td>
                                 <td>{{ count($task->subtask) }}</td>
                                 <td>{{ $task->createdAt }}</td>
                                 <td>{{ $task->completedAt ?? '---' }}</td>
                                 <td>
                                     <span><a href="/task/show/{{ $task->id }}"><i class="bi bi-eye-fill"></i></a></span>
-                                    @if (\Illuminate\Support\Facades\Auth::user()->id == $task->user->id && $task->status == 0)
+                                    @if ($auth::user()->id == $task->user->id && $task->status == $status::Todo->value)
                                         <span><a href="/task/edit/{{ $task->id }}"><i class="bi bi-pencil-square mx-1"></i></a></span>
                                         <span><i role="button" id="complete" task-id="{{ $task->id }}" class="bi bi-calendar-check text-success mx-1"></i></span>
                                         <span><i role="button" id="delete" task-id="{{ $task->id }}" class="bi bi-trash text-danger"></i></span>
