@@ -3,18 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Todo;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 
 class TodoController extends Controller
 {
-    /**
-     * @var Todo
-     */
-    public $model;
-
     /**
      * Create a new controller instance.
      *
@@ -23,7 +23,6 @@ class TodoController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->model = new Todo();
     }
 
     /**
@@ -35,7 +34,7 @@ class TodoController extends Controller
     {
         $tasks = Todo::with('user')
             ->where([
-                ['pid', 0],
+                ['parent_id', 0],
                 ['deleted', 0]
             ])
             ->orderBy('id', 'desc')
@@ -50,58 +49,65 @@ class TodoController extends Controller
      */
     public function showTaskForm($id=null)
     {
-        $pid = $id;
 
-        if (null !== $pid) {
-            $task = $this->model->getTaskById($pid);
+        $parent_id = $id;
 
-            if (false === $this->checkAccess($task->uid, false)) {
+        if (null !== $parent_id) {
+            $task = $this->getTaskById($parent_id);
+
+            if (false === $this->checkAccess($task->user_id, false)) {
                 return view('403');
             }
         }
 
-        return view('task.form', compact('pid'));
+        return view('task.form', compact('parent_id'));
     }
 
     /**
      * @param $id
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application
+     * @return Application|Factory|View|\Illuminate\Foundation\Application
      */
-    public function showTask($id)
+    public function showTask($id): \Illuminate\Foundation\Application|View|Factory|Application
     {
         $canComplete = true;
 
-        $task       = Todo::with(['user', 'subtask'])->find($id);
-        $subtasks   = $task->subtask;
+        $task = Todo::with(['user', 'subtask'])->find($id);
+        $subtasks = $task->subtask;
+
         $allSubtask = $task->childs;
 
         if (count($allSubtask) > 0) {
-            $subtaskIds  = $this->model->allSubtask($allSubtask);
-            $canComplete = $this->model->canComplete($subtaskIds);
+            $subtaskIds = $this->allSubtask($allSubtask);
+            $canComplete = $this->canComplete($subtaskIds);
         }
 
         return view('task.show', compact('task', 'subtasks', 'canComplete'));
     }
 
     /**
-     * @param null $id
      * @param Request $request
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
+     * @return Application|ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
      */
-    public function createTask(Request $request)
+    public function createTask(Request $request): \Illuminate\Foundation\Application|\Illuminate\Http\Response|Application|ResponseFactory
     {
-        $data        = $request->all();
-        $data['uid'] = Auth::user()->id;
-        $result      = Todo::create($data);
+        $data = $request->all();
+        $data['user_id'] = Auth::user()->id;
+
+        $result = Todo::create($data);
 
         return response(['status' => true, 'id' => $result->id], 200);
     }
 
-    public function editTask($id, Request $request)
+    /**
+     * @param $id
+     * @param Request $request
+     * @return false|Application|ResponseFactory|Factory|View|\Illuminate\Foundation\Application|\Illuminate\Http\Response
+     */
+    public function editTask($id, Request $request): Factory|View|\Illuminate\Foundation\Application|\Illuminate\Http\Response|bool|Application|ResponseFactory
     {
-        $task = $this->model->getTaskById($id ?? $request->get('id'));
+        $task = $this->getTaskById($id ?? $request->get('id'));
 
-        if (false === $this->checkAccess($task->uid, false)) {
+        if (false === $this->checkAccess($task->user_id, false)) {
             return view('403');
         }
 
@@ -110,26 +116,30 @@ class TodoController extends Controller
         }
 
         if ('POST' == $request->method()) {
-            $data   = $request->all();
+            $data = $request->all();
+
             $result = $task->update($data);
 
             return response(['status' => $result]);
         }
+
+        return false;
     }
 
     /**
      * @param Request $request
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
+     * @return Application|ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
      */
-    public function completeTask(Request $request)
+    public function completeTask(Request $request): \Illuminate\Foundation\Application|\Illuminate\Http\Response|Application|ResponseFactory
     {
         $canComplete = true;
-        $task        = $this->model->getTaskById($request->get('id'));
-        $subtask     = $task->childs;
+        $task = $this->getTaskById($request->get('id'));
+
+        $subtask = $task->childs;
 
         if (count($subtask) > 0) {
-            $subtaskIds  = $this->model->allSubtask($subtask);
-            $canComplete = $this->model->canComplete($subtaskIds);
+            $subtaskIds = $this->allSubtask($subtask);
+            $canComplete = $this->canComplete($subtaskIds);
         }
 
         if (false === $canComplete) {
@@ -149,22 +159,23 @@ class TodoController extends Controller
 
     /**
      * @param Request $request
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
+     * @return Application|ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
      */
-    public function deleteTask(Request $request)
+    public function deleteTask(Request $request): \Illuminate\Foundation\Application|\Illuminate\Http\Response|Application|ResponseFactory
     {
         $canDelete = true;
-        $task      = $this->model->getTaskById($request->get('id'));
-        $subtask   = $task->childs;
+        $task = $this->getTaskById($request->get('id'));
+
+        $subtask = $task->childs;
 
         if (count($subtask) > 0) {
-            $subtaskIds = $this->model->allSubtask($subtask);
-            $canDelete  = $this->model->canDelete($subtaskIds);
+            $subtaskIds = $this->allSubtask($subtask);
+            $canDelete = $this->canDelete($subtaskIds);
         }
 
         if (false === $canDelete) {
             return response([
-                'status'  => false,
+                'status'=>false,
                 'message' => "You can not delete this task. \nThis task have completed subtask."
             ]);
         }
@@ -175,13 +186,67 @@ class TodoController extends Controller
     }
 
     /**
-     * @param $uid
-     * @param bool $ajax
-     * @return bool|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
+     * @param $tasks
+     * @param int $level
+     * @param array $subtaskIds
+     * @return array
      */
-    protected function checkAccess($uid, $ajax=true)
+    protected function allSubtask($tasks, $level = 0, &$subtaskIds = []): array
     {
-        if ($uid !== Auth::user()->id) {
+        foreach ($tasks as $task) {
+            $subtaskIds[] = $task->id;
+
+            if ($task->childs->isNotEmpty()) {
+                $this->allSubtask($task->childs, $level + 1, $subtaskIds);
+            }
+        }
+
+        return collect(Arr::sort($subtaskIds))->values()->toArray();
+    }
+
+    /**
+     * @param $allSubtasks
+     * @return bool
+     */
+    protected function canComplete($allSubtasks): bool
+    {
+        $subtasks = Todo::whereIn('id', $allSubtasks)->get();
+
+        return collect($subtasks)->pluck('status')->min() == 1;
+    }
+
+    /**
+     * @param $allSubtasks
+     * @return bool
+     */
+    protected function canDelete($allSubtasks): bool
+    {
+        $subtasks = Todo::whereIn('id', $allSubtasks)->get();
+
+        return collect($subtasks)->pluck('status')->max() == 0;
+    }
+
+    /**
+     * @param $id
+     * @return mixed
+     */
+    protected function getTaskById($id): mixed
+    {
+        $task = Todo::find($id);
+
+        $this->checkAccess($task->user_id);
+
+        return $task;
+    }
+
+    /**
+     * @param $user_id
+     * @param $ajax
+     * @return bool|Application|ResponseFactory|\Illuminate\Foundation\Application|\Illuminate\Http\Response
+     */
+    protected function checkAccess($user_id, $ajax=true): \Illuminate\Foundation\Application|\Illuminate\Http\Response|bool|Application|ResponseFactory
+    {
+        if ($user_id !== Auth::user()->id) {
             return $ajax === true ? response('You can\'t do this action with this task', 403) : false;
         }
 

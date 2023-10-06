@@ -7,8 +7,8 @@
 
                 <div style="text-align: right">
                     <a href="/task/list" class="btn btn-primary">Back Home</a>
-                    @if($task->pid > 0)
-                        <a href="/task/show/{{ $task->pid }}" class="btn btn-primary">Back to Parent</a>
+                    @if($task->parent_id > 0)
+                        <a href="/task/show/{{ $task->parent_id }}" class="btn btn-primary">Back to Parent</a>
                     @endif
                 </div>
 
@@ -32,11 +32,11 @@
                     <div class="card-footer">
                         <div class="row">
                             <div class="col-md-6 mt-2">
-                                [ Status: <span class="text-{{ $task->status == 0 ? 'info' : 'success' }}">{{ $task->status == 0 ? 'Todo' : 'Done' }}</span> |
+                                [ Status: <span class="text-{{ $status::tryFrom($task->status)->getStatusStyle() }}">{{ ucfirst($task->status) }}</span> |
                                 Priority: {{ $task->priority }} ]
                             </div>
                             <div class="col-md-6" style="text-align: right">
-                                @if (\Illuminate\Support\Facades\Auth::user()->id == $task->user->id && $task->status == 0)
+                                @if (\Illuminate\Support\Facades\Auth::user()->id == $task->user->id && $status::tryFrom($task->status)->name == $status::Todo)
                                 <a href="/task/edit/{{ $task->id }}" class="btn btn-primary">Edit</a>
                                 <a href="/task/create/{{ $task->id }}" class="btn btn-primary">Create Subtask</a>
 
@@ -76,16 +76,16 @@
                             <th scope="row">{{ $subtask->id }}</th>
                             <td>{{ $subtask->user->name }}</td>
                             <td><a href="/task/show/{{ $subtask->id }}" class="link-underline link-underline-opacity-0">{{ $subtask->title }}</a></td>
-                            <td>{{ $subtask->priority }}</td>
-                            <td class=" text-{{ $subtask->status == 0 ? 'info' : 'success' }}">
-                                {{ $subtask->status == 0 ? 'Todo' : 'Done' }}
+                            <td>{{ $priority::tryFrom($subtask->priority)->name }}</td>
+                            <td class=" text-{{ $status::tryFrom($subtask->status)->getStatusStyle() }}">
+                                {{ $status::tryFrom($subtask->status)->name }}
                             </td>
                             <td>{{ count($subtask->subtask) }}</td>
                             <td>{{ $subtask->createdAt }}</td>
                             <td>{{ $subtask->completedAt ?? '---' }}</td>
                             <td>
                                 <span><a href="/task/show/{{ $subtask->id }}"><i class="bi bi-eye-fill"></i></a></span>
-                                @if (\Illuminate\Support\Facades\Auth::user()->id == $subtask->user->id && $subtask->status == 0)
+                                @if (\Illuminate\Support\Facades\Auth::user()->id == $subtask->user->id && $status::tryFrom($subtask->status)->name == $status::Todo)
                                     <span><a href="/task/edit/{{ $subtask->id }}"><i class="bi bi-pencil-square mx-1"></i></a></span>
                                     <span><i role="button" id="complete" task-id="{{ $subtask->id }}" class="bi bi-calendar-check text-success mx-1"></i></span>
                                     <span><i role="button" id="delete" task-id="{{ $subtask->id }}" class="bi bi-trash text-danger"></i></span>

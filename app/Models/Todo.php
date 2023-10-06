@@ -27,8 +27,8 @@ class Todo extends Model
      * @var string[]
      */
     protected $fillable = [
-        'uid',
-        'pid',
+        'user_id',
+        'parent_id',
         'title',
         'description',
         'status',
@@ -47,7 +47,7 @@ class Todo extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class, 'uid', 'id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     /**
@@ -55,7 +55,7 @@ class Todo extends Model
      */
     public function subtask()
     {
-        return $this->hasMany(Todo::class, 'pid');
+        return $this->hasMany(Todo::class, 'parent_id');
     }
 
     /**
