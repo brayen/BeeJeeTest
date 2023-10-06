@@ -16,10 +16,10 @@ $(document).ready(function() {
         let data = {},
             action = $(e.target).hasClass('update') ? 'update' : 'create',
             taskId = $('#task-form').attr('task-id') ?? '',
-            pid    = $('#task-form').attr('task-pid');
+            parent_id    = $('#task-form').attr('task-parent_id');
 
-        if (pid > 0) {
-            data['pid'] = pid;
+        if (parent_id > 0) {
+            data['parent_id'] = parent_id;
         }
 
         $('#task-form').find('.task-data').each((i, d) => {
