@@ -36,4 +36,7 @@ Route::controller(TodoController::class)->group(function(){
     Route::post('/task/complete', 'completeTask');
 
     Route::post('/task/delete', 'deleteTask');
+
+    Route::get('/user/apiKey', 'apiKey')->name('apiKey');
+    Route::post('/user/apiKey/generate', 'generateApiKey');
 });

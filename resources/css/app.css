@@ -1,0 +1,13 @@
+div.clipboard-msg {
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    border: 1px solid #d9d9d9;
+    border-radius: 5px;
+    background-color: aquamarine;
+    width: 200px;
+    height: 50px;
+    text-align: center;
+    padding-top: 14px;
+    display: none;
+}

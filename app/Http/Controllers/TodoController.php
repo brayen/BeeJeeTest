@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ApiKey;
 use App\Models\Todo;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 
 class TodoController extends Controller
 {
+    protected static ApiKey $apiKey;
     /**
      * Create a new controller instance.
      *
@@ -23,6 +25,7 @@ class TodoController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        self::$apiKey = new ApiKey();
     }
 
     /**
@@ -183,6 +186,18 @@ class TodoController extends Controller
         $result = $task->update(['deleted'=>1]);
 
         return response(['status' => $result]);
+    }
+
+    public function apiKey()
+    {
+        $data = self::$apiKey::getApiKey();
+
+        return view('api.key', compact('data'));
+    }
+
+    protected function generateApiKey()
+    {
+        return response()->json(['api_key' => self::$apiKey::createApiKey()]);
     }
 
     /**
